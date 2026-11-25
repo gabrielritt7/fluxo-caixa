@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+.env
+# dados de clientes e saídas geradas nunca vão para o repositório (LGPD)
+dados/
+saida/

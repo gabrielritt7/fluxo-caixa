@@ -1,0 +1,38 @@
+{
+  "padaria_simples.xlsx": {
+    "n": 60,
+    "entradas": 59026.2,
+    "saidas": 88401.65
+  },
+  "clinica_colunas_separadas.xlsx": {
+    "n": 80,
+    "entradas": 65809.23,
+    "saidas": 116671.48
+  },
+  "oficina_sinal.csv": {
+    "n": 50,
+    "entradas": 50469.81,
+    "saidas": 65681.0
+  },
+  "loja_varias_abas.xlsx": {
+    "n": 120,
+    "entradas": 128697.18,
+    "saidas": 119561.03
+  },
+  "extrato_banco.ofx": {
+    "n": 30,
+    "entradas": 15665.67,
+    "saidas": 37871.76
+  },
+  "cabecalho_estranho.xlsx": {
+    "n": 40,
+    "entradas": 42100.88,
+    "saidas": 53130.4
+  },
+  "demo_padaria_trigo_bom.xlsx": {
+    "n": 235,
+    "entradas": 115648.27,
+    "saidas": 127614.52,
+    "pagos": 231
+  }
+}

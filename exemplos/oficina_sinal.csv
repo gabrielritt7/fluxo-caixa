@@ -1,0 +1,51 @@
+data;descricao;valor;categoria
+1/2/25;Energia CEMIG;-3.024,16;Utilidades
+1/2/25;Pix cliente;1.356,35;Vendas
+1/2/25;Pix cliente;2.744,76;Vendas
+2/2/25;Encomenda festa;1.155,54;Vendas
+2/2/25;Encomenda festa;2.975,71;Vendas
+3/2/25;Encomenda festa;2.179,42;Vendas
+3/2/25;Pix cliente;2.513,94;Vendas
+4/2/25;Serviço cartão crédito;1.601,00;Vendas
+4/2/25;Serviço cartão crédito;1.975,43;Vendas
+4/2/25;Serviço cartão débito;736,41;Vendas
+7/2/25;Embalagens;-5.576,81;Insumos
+8/2/25;Encomenda festa;2.447,62;Vendas
+8/2/25;Folha de pagamento;-1.834,85;Pessoal
+10/2/25;Serviço cartão crédito;866,66;Vendas
+10/2/25;Serviço cartão débito;2.018,10;Vendas
+12/2/25;Embalagens;-2.619,50;Insumos
+12/2/25;Pix cliente;873,93;Vendas
+13/2/25;Pix cliente;271,91;Vendas
+13/2/25;Pix cliente;1.649,77;Vendas
+14/2/25;Internet Vivo;-3.416,85;Utilidades
+14/2/25;Recebimento boleto;1.832,55;Vendas
+14/2/25;Recebimento boleto;2.549,90;Vendas
+17/2/25;Serviço cartão crédito;994,25;Vendas
+18/2/25;Contador;-4.334,07;Serviços
+18/2/25;Peças auto;-3.038,19;Insumos
+18/2/25;Recebimento boleto;3.466,91;Vendas
+19/2/25;Aluguel loja;-146,51;Ocupação
+19/2/25;Manutenção forno;-3.326,32;Manutenção
+19/2/25;Serviço balcão;3.240,62;Vendas
+20/2/25;Contador;-5.480,87;Serviços
+20/2/25;Encomenda festa;1.196,21;Vendas
+20/2/25;Internet Vivo;-5.189,12;Utilidades
+20/2/25;Serviço cartão débito;2.518,83;Vendas
+21/2/25;Pix cliente;1.163,04;Vendas
+21/2/25;Pix cliente;1.757,86;Vendas
+22/2/25;Embalagens;-559,88;Insumos
+22/2/25;Encomenda festa;2.889,84;Vendas
+22/2/25;Taxa maquininha;-3.402,88;Financeiro
+22/2/25;Serviço balcão;1.900,17;Vendas
+23/2/25;Aluguel loja;-686,75;Ocupação
+24/2/25;Aluguel loja;-882,75;Ocupação
+24/2/25;Folha de pagamento;-3.453,16;Pessoal
+24/2/25;Manutenção forno;-2.791,93;Manutenção
+25/2/25;Energia CEMIG;-3.029,72;Utilidades
+25/2/25;Serviço cartão débito;378,56;Vendas
+27/2/25;Energia CEMIG;-4.257,66;Utilidades
+27/2/25;Peças auto;-606,33;Insumos
+27/2/25;Peças auto;-2.503,73;Insumos
+28/2/25;Recebimento boleto;1.214,52;Vendas
+28/2/25;Taxa maquininha;-5.518,96;Financeiro

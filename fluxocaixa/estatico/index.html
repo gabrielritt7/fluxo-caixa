@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Caixa PME</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: fluxo em passos (empresa → planilha → conferir colunas → revisar categorias → painel),
+   uma coluna central; mesmos tokens do painel. */
+:root {
+  --bg: #f2f5f4; --surface: #ffffff; --surface-2: #e9eeec; --ink: #14201c; --muted: #596a64;
+  --line: #d6dfdb; --accent: #2343c4; --accent-soft: rgba(35, 67, 196, .12); --on-accent: #ffffff;
+  --ok: #1b7f53; --ok-soft: rgba(27, 127, 83, .12); --warn: #a35f00; --warn-soft: rgba(196, 122, 0, .14);
+  --crit: #bf3426; --crit-soft: rgba(191, 52, 38, .12);
+  --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1412; --surface: #161f1c; --surface-2: #1d2824; --ink: #e5ede9; --muted: #93a49e;
+    --line: #2a3733; --accent: #8098ff; --accent-soft: rgba(128, 152, 255, .16); --on-accent: #0e1412;
+    --ok: #4fc48c; --ok-soft: rgba(79, 196, 140, .14); --warn: #f0aa45; --warn-soft: rgba(240, 170, 69, .14);
+    --crit: #ff6f61; --crit-soft: rgba(255, 111, 97, .14); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1412; --surface: #161f1c; --surface-2: #1d2824; --ink: #e5ede9; --muted: #93a49e;
+  --line: #2a3733; --accent: #8098ff; --accent-soft: rgba(128, 152, 255, .16); --on-accent: #0e1412;
+  --ok: #4fc48c; --ok-soft: rgba(79, 196, 140, .14); --warn: #f0aa45; --warn-soft: rgba(240, 170, 69, .14);
+  --crit: #ff6f61; --crit-soft: rgba(255, 111, 97, .14); color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 15px/1.5 var(--f-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px 64px; }
+main { max-width: 1040px; margin: 0 auto; display: grid; gap: 20px; }
+h1, h2, h3 { font-family: var(--f-display); margin: 0; letter-spacing: -.01em; text-wrap: balance; }
+h1 { font-size: 28px; } h2 { font-size: 19px; } h3 { font-size: 16px; }
+p { margin: 0; }
+.mudo { color: var(--muted); } .pequeno { font-size: 13px; } .neg { color: var(--crit); } .okc { color: var(--ok); }
+.cartao { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: grid; gap: 14px; min-width: 0; }
+.cab { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; }
+.passo { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
+.linha { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
+label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+input, select { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; min-width: 0; }
+input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button { font: 600 14px var(--f-body); border: 0; border-radius: 8px; padding: 9px 16px; cursor: pointer; background: var(--accent); color: var(--on-accent); }
+button.sec { background: var(--surface-2); color: var(--ink); }
+button.perigo { background: transparent; color: var(--crit); padding: 4px 8px; }
+button:disabled { opacity: .5; cursor: default; }
+a { color: var(--accent); }
+
+.soltar { border: 2px dashed var(--line); border-radius: 12px; padding: 28px 16px; text-align: center; display: grid; gap: 8px; justify-items: center; cursor: pointer; }
+.soltar.ativo { border-color: var(--accent); background: var(--accent-soft); }
+
+.tabela-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+th, td { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+thead th { background: var(--surface-2); position: sticky; top: 0; }
+th select { width: 100%; min-width: 130px; font-size: 13px; padding: 5px 6px; }
+th select.marcado { border-color: var(--accent); background: var(--accent-soft); }
+tr:last-child td { border-bottom: 0; }
+
+.aviso { border-radius: 10px; padding: 10px 14px; font-size: 14px; }
+.aviso.erro { background: var(--crit-soft); color: var(--crit); }
+.aviso.ok { background: var(--ok-soft); color: var(--ok); }
+.aviso.atencao { background: var(--warn-soft); color: var(--warn); }
+.chip { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--surface-2); color: var(--muted); }
+.chip.ia { background: var(--accent-soft); color: var(--accent); }
+.chip.memorizado { background: var(--ok-soft); color: var(--ok); }
+.numeros { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.numeros div { background: var(--surface-2); border-radius: 10px; padding: 12px 14px; display: grid; }
+.numeros strong { font: 700 24px var(--f-display); }
+
+.lanc { display: grid; grid-template-columns: 82px minmax(0, 1fr) 110px; gap: 4px 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.lanc:last-child { border-bottom: 0; }
+.lanc .acoes-l { grid-column: 2 / -1; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.lanc .valor { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+@media (max-width: 560px) { .lanc { grid-template-columns: 1fr auto; } .lanc .data { grid-column: 1 / -1; } .lanc .acoes-l { grid-column: 1 / -1; } }
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-size: 14px; max-width: calc(100% - 32px); }
+.envios { list-style: none; margin: 0; padding: 0; }
+.envios li { display: flex; justify-content: space-between; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.envios li:last-child { border-bottom: 0; }
+</style>
+</head>
+<body>
+<main>
+  <header class="cab">
+    <div><div class="passo">Protótipo</div><h1>Caixa PME</h1></div>
+    <a href="/docs" class="pequeno">documentação da API</a>
+  </header>
+
+  <!-- 1. empresa -->
+  <section class="cartao" id="sec-empresa">
+    <div class="cab"><h2>Empresa</h2><span class="passo">passo 1</span></div>
+    <div class="linha" id="escolher-empresa">
+      <label>Empresa<select id="sel-empresa"></select></label>
+    </div>
+    <form class="linha" id="form-empresa">
+      <label>Nome<input id="f-nome" required placeholder="Padaria Trigo Bom"></label>
+      <label>Setor<input id="f-setor" placeholder="padaria"></label>
+      <label>Saldo no banco no início da planilha<input id="f-saldo" inputmode="decimal" placeholder="18.000,00"></label>
+      <button type="submit" id="btn-empresa">Criar empresa</button>
+    </form>
+    <div id="empresa-atual" hidden>
+      <div class="linha">
+        <label>Saldo no início da planilha<input id="e-saldo" inputmode="decimal"></label>
+        <button class="sec" id="btn-saldo">Salvar saldo</button>
+        <a id="link-painel" href="#" target="_blank" rel="noopener"><button class="sec" type="button">Abrir painel</button></a>
+      </div>
+      <ul class="envios" id="envios"></ul>
+    </div>
+  </section>
+
+  <!-- 2. upload -->
+  <section class="cartao" id="sec-upload" hidden>
+    <div class="cab"><h2>Enviar planilha</h2><span class="passo">passo 2</span></div>
+    <label class="soltar" id="soltar" for="arquivo">
+      <strong>Arraste a planilha aqui ou clique para escolher</strong>
+      <span class="pequeno mudo">Excel (.xlsx, .xls), CSV ou extrato do banco (.ofx) · até 10 MB</span>
+      <input type="file" id="arquivo" accept=".xlsx,.xlsm,.xls,.csv,.txt,.ofx" hidden>
+    </label>
+    <div id="upload-msg"></div>
+  </section>
+
+  <!-- 3. conferir colunas -->
+  <section class="cartao" id="sec-previa" hidden>
+    <div class="cab"><h2>Entendemos assim. Está certo?</h2><span class="passo">passo 3</span></div>
+    <p class="mudo pequeno">Confira o que é cada coluna. Se algo estiver errado, troque no seletor acima da coluna. Da próxima vez que você enviar uma planilha neste formato, lembramos da sua escolha.</p>
+    <div id="previa"></div>
+    <div id="previa-erro"></div>
+    <div class="linha"><button id="btn-confirmar">Confirmar e processar</button><button class="sec" id="btn-cancelar">Cancelar envio</button></div>
+  </section>
+
+  <!-- resultado -->
+  <section class="cartao" id="sec-resultado" hidden>
+    <div class="cab"><h2>Planilha processada</h2></div>
+    <div class="numeros" id="numeros"></div>
+    <div id="resultado-aviso"></div>
+  </section>
+
+  <!-- 4. revisar -->
+  <section class="cartao" id="sec-revisar" hidden>
+    <div class="cab"><h2>Revisar categorias</h2><span class="passo">passo 4</span></div>
+    <div class="linha">
+      <label>Mostrar<select id="filtro-conf">
+        <option value="baixa">só as que precisam de revisão</option>
+        <option value="">todos os lançamentos</option>
+      </select></label>
+      <label>Buscar<input id="filtro-busca" placeholder="ex.: pix, cemig"></label>
+    </div>
+    <p class="mudo pequeno" id="revisar-info"></p>
+    <div id="lista"></div>
+    <div class="linha"><button class="sec" id="btn-mais" hidden>Carregar mais</button></div>
+  </section>
+</main>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const brl = v => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
+const dataBR = iso => iso ? iso.split("-").reverse().join("/") : "";
+const numBR = s => { if (!s || !s.trim()) return null; const t = s.replace(/[R$\s]/g, ""); const n = Number(t.includes(",") ? t.replace(/\./g, "").replace(",", ".") : t); return isNaN(n) ? NaN : n; };
+let toastT;
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 4000); }
+
+async function api(metodo, url, corpo) {
+  const op = { method: metodo, headers: {} };
+  if (corpo instanceof FormData) op.body = corpo;
+  else if (corpo !== undefined) { op.body = JSON.stringify(corpo); op.headers["Content-Type"] = "application/json"; }
+  const r = await fetch(url, op);
+  const dados = await r.json().catch(() => ({}));
+  if (!r.ok) { const e = new Error(mensagemErro(dados.detail)); e.detalhe = dados.detail; throw e; }
+  return dados;
+}
+function mensagemErro(d) {
+  if (!d) return "Algo deu errado. Tente de novo.";
+  if (typeof d === "string") return d;
+  if (d.mensagem) return d.mensagem + " " + d.tabelas.map(t => `${t.origem}: ${t.problemas.join("; ")}`).join(" · ");
+  if (Array.isArray(d)) return d.map(x => x.msg).join("; ");
+  return JSON.stringify(d);
+}
+
+/* ------------------------------------------------ estado */
+let EMPRESA = null, CATEGORIAS = [], UPLOAD = null, OFFSET = 0;
+const CAMPOS = [
+  ["", "Ignorar"], ["coluna_data", "Data"], ["coluna_descricao", "Descrição"],
+  ["coluna_valor", "Valor"], ["coluna_entrada", "Entradas"], ["coluna_saida", "Saídas"],
+  ["coluna_tipo", "Entrada ou saída"], ["coluna_categoria", "Categoria"],
+  ["coluna_vencimento", "Vencimento"], ["coluna_status", "Pago / pendente"],
+];
+
+/* ------------------------------------------------ 1. empresa */
+async function carregarEmpresas(selecionar) {
+  const lista = await api("GET", "/empresas");
+  $("sel-empresa").innerHTML = `<option value="">+ nova empresa</option>` +
+    lista.map(e => `<option value="${e.id}">${esc(e.nome)}</option>`).join("");
+  $("escolher-empresa").hidden = !lista.length;
+  const id = selecionar ?? lerLocal("empresa");
+  if (id && lista.some(e => String(e.id) === String(id))) { $("sel-empresa").value = id; await abrirEmpresa(id); }
+  else mostrarFormEmpresa();
+}
+function lerLocal(k) { try { return localStorage.getItem(k); } catch { return null; } }
+function gravarLocal(k, v) { try { localStorage.setItem(k, v); } catch {} }
+function mostrarFormEmpresa() {
+  EMPRESA = null; $("form-empresa").hidden = false; $("empresa-atual").hidden = true;
+  ["sec-upload", "sec-previa", "sec-resultado", "sec-revisar"].forEach(s => $(s).hidden = true);
+}
+async function abrirEmpresa(id) {
+  EMPRESA = await api("GET", `/empresas/${id}`);
+  gravarLocal("empresa", id);
+  $("form-empresa").hidden = true; $("empresa-atual").hidden = false; $("sec-upload").hidden = false;
+  $("e-saldo").value = EMPRESA.saldo_inicial != null ? EMPRESA.saldo_inicial.toLocaleString("pt-BR", { minimumFractionDigits: 2 }) : "";
+  $("link-painel").href = `/empresas/${id}/painel`;
+  $("link-painel").hidden = !EMPRESA.uploads.some(u => u.status === "processado");
+  $("envios").innerHTML = EMPRESA.uploads.map(u => `
+    <li><span>${esc(u.nome_arquivo)} <span class="mudo pequeno">· ${dataBR(u.criado_em.slice(0, 10))} · ${u.status === "processado" ? `${u.resultado.novos} novos` : "não confirmado"}</span></span>
+    <button class="perigo" data-excluir="${u.id}">excluir</button></li>`).join("");
+  $("sec-revisar").hidden = !EMPRESA.uploads.some(u => u.status === "processado");
+  if (!$("sec-revisar").hidden) carregarLancamentos(true);
+}
+$("sel-empresa").onchange = e => e.target.value ? abrirEmpresa(e.target.value) : mostrarFormEmpresa();
+$("form-empresa").onsubmit = async ev => {
+  ev.preventDefault();
+  const saldo = numBR($("f-saldo").value);
+  if (Number.isNaN(saldo)) return toast("Saldo inválido. Use o formato 18.000,00");
+  try {
+    const e = await api("POST", "/empresas", { nome: $("f-nome").value, setor: $("f-setor").value || null, saldo_inicial: saldo });
+    await carregarEmpresas(e.id); toast("Empresa criada.");
+  } catch (err) { toast(err.message); }
+};
+$("btn-saldo").onclick = async () => {
+  const saldo = numBR($("e-saldo").value);
+  if (Number.isNaN(saldo)) return toast("Saldo inválido. Use o formato 18.000,00");
+  await api("PATCH", `/empresas/${EMPRESA.id}`, { saldo_inicial: saldo }); toast("Saldo salvo.");
+};
+$("envios").onclick = async ev => {
+  const id = ev.target.dataset.excluir; if (!id) return;
+  if (ev.target.dataset.certeza !== "1") { ev.target.dataset.certeza = "1"; ev.target.textContent = "confirmar exclusão"; return; }
+  const r = await api("DELETE", `/empresas/${EMPRESA.id}/uploads/${id}`);
+  toast(`Envio excluído (${r.lancamentos_removidos} lançamentos removidos).`); abrirEmpresa(EMPRESA.id);
+};
+
+/* ------------------------------------------------ 2. upload */
+const soltar = $("soltar");
+["dragenter", "dragover"].forEach(t => soltar.addEventListener(t, e => { e.preventDefault(); soltar.classList.add("ativo"); }));
+["dragleave", "drop"].forEach(t => soltar.addEventListener(t, e => { e.preventDefault(); soltar.classList.remove("ativo"); }));
+soltar.addEventListener("drop", e => e.dataTransfer.files[0] && enviar(e.dataTransfer.files[0]));
+$("arquivo").onchange = e => e.target.files[0] && enviar(e.target.files[0]);
+async function enviar(arq) {
+  $("upload-msg").innerHTML = `<p class="mudo">Lendo ${esc(arq.name)}…</p>`;
+  $("sec-resultado").hidden = true;
+  const fd = new FormData(); fd.append("arquivo", arq);
+  try {
+    UPLOAD = await api("POST", `/empresas/${EMPRESA.id}/uploads`, fd);
+    $("upload-msg").innerHTML = ""; mostrarPrevia();
+  } catch (err) { $("upload-msg").innerHTML = `<div class="aviso erro">${esc(err.message)}</div>`; }
+  $("arquivo").value = "";
+}
+
+/* ------------------------------------------------ 3. prévia */
+function mostrarPrevia() {
+  $("sec-previa").hidden = false; $("previa-erro").innerHTML = "";
+  const partes = [];
+  if (UPLOAD.formato === "ofx") partes.push(`<div class="aviso ok">Extrato bancário com ${UPLOAD.lancamentos_ofx} lançamentos. O formato OFX é padrão e não precisa de conferência.</div>`);
+  UPLOAD.tabelas.forEach(t => {
+    const porColuna = {};
+    Object.entries(t.mapeamento).forEach(([campo, col]) => { if (campo.startsWith("coluna_") && col) porColuna[col] = campo; });
+    const metodo = t.mapeamento.metodo.startsWith("ia") ? ["ia", "lido pela IA"] : t.mapeamento.metodo === "memorizado" ? ["memorizado", "formato já conhecido"] : ["", "lido por regras"];
+    partes.push(`
+      <div class="cartao" style="padding:14px" data-tabela="${t.indice}">
+        <div class="cab"><label style="flex-direction:row;display:flex;gap:8px;align-items:center;color:var(--ink)">
+          <input type="checkbox" class="usar" ${t.sugerida ? "checked" : ""}> <strong>${esc(t.origem)}</strong></label>
+          <span><span class="chip ${metodo[0]}">${metodo[1]}</span> <span class="mudo pequeno">${t.total_linhas} linhas</span></span></div>
+        ${t.problemas.length ? `<div class="aviso atencao">${esc(t.problemas.join("; "))}</div>` : ""}
+        ${t.mapeamento.observacoes && t.mapeamento.metodo !== "memorizado" ? `<p class="pequeno mudo">${esc(t.mapeamento.observacoes)}</p>` : ""}
+        <div class="tabela-wrap"><table>
+          <thead><tr>${t.colunas.map(c => `<th><select data-coluna="${esc(c)}" class="${porColuna[c] ? "marcado" : ""}">
+            ${CAMPOS.map(([v, n]) => `<option value="${v}" ${(porColuna[c] || "") === v ? "selected" : ""}>${n}</option>`).join("")}
+          </select></th>`).join("")}</tr>
+          <tr>${t.colunas.map(c => `<th>${esc(c)}</th>`).join("")}</tr></thead>
+          <tbody>${t.amostra.map(l => `<tr>${l.map(v => `<td>${esc(v)}</td>`).join("")}</tr>`).join("")}</tbody>
+        </table></div>
+      </div>`);
+  });
+  $("previa").innerHTML = partes.join("");
+  $("previa").querySelectorAll("th select").forEach(s => s.onchange = () => s.classList.toggle("marcado", !!s.value));
+  $("sec-previa").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+$("btn-cancelar").onclick = async () => {
+  await api("DELETE", `/empresas/${EMPRESA.id}/uploads/${UPLOAD.id}`);
+  $("sec-previa").hidden = true; UPLOAD = null; toast("Envio cancelado.");
+};
+$("btn-confirmar").onclick = async () => {
+  const tabelas = [];
+  for (const bloco of $("previa").querySelectorAll("[data-tabela]")) {
+    const mapeamento = Object.fromEntries(CAMPOS.slice(1).map(([c]) => [c, null]));
+    const usados = {};
+    for (const s of bloco.querySelectorAll("th select")) {
+      if (!s.value) continue;
+      if (usados[s.value]) return $("previa-erro").innerHTML = `<div class="aviso erro">"${CAMPOS.find(c => c[0] === s.value)[1]}" foi escolhido para duas colunas. Escolha só uma.</div>`;
+      usados[s.value] = true; mapeamento[s.value] = s.dataset.coluna;
+    }
+    tabelas.push({ indice: +bloco.dataset.tabela, usar: bloco.querySelector(".usar").checked, mapeamento });
+  }
+  $("btn-confirmar").disabled = true; $("btn-confirmar").textContent = "Processando…";
+  try {
+    const r = await api("POST", `/empresas/${EMPRESA.id}/uploads/${UPLOAD.id}/confirmar`, { tabelas });
+    $("sec-previa").hidden = true; mostrarResultado(r); await abrirEmpresa(EMPRESA.id);
+  } catch (err) { $("previa-erro").innerHTML = `<div class="aviso erro">${esc(err.message)}</div>`; }
+  $("btn-confirmar").disabled = false; $("btn-confirmar").textContent = "Confirmar e processar";
+};
+
+/* ------------------------------------------------ resultado */
+function mostrarResultado(r) {
+  $("sec-resultado").hidden = false;
+  $("numeros").innerHTML = `
+    <div><span class="pequeno mudo">lançamentos lidos</span><strong>${r.lancamentos_lidos}</strong></div>
+    <div><span class="pequeno mudo">novos</span><strong>${r.novos}</strong></div>
+    <div><span class="pequeno mudo">já existiam (atualizados)</span><strong>${r.ja_existiam}</strong></div>
+    <div><span class="pequeno mudo">para revisar</span><strong class="${r.para_revisar ? "neg" : ""}">${r.para_revisar}</strong></div>`;
+  $("resultado-aviso").innerHTML = (r.aviso ? `<div class="aviso atencao">${esc(r.aviso)}</div>` : "") +
+    (r.para_revisar ? `<p>Revise as categorias abaixo. Cada correção vira regra e vale para os próximos meses.</p>` : `<div class="aviso ok">Tudo classificado. <a href="/empresas/${EMPRESA.id}/painel" target="_blank" rel="noopener">Abrir o painel</a></div>`);
+}
+
+/* ------------------------------------------------ 4. revisar */
+async function carregarLancamentos(reiniciar) {
+  if (reiniciar) { OFFSET = 0; $("lista").innerHTML = ""; }
+  const p = new URLSearchParams({ limite: 30, deslocamento: OFFSET });
+  if ($("filtro-conf").value) p.set("confianca", $("filtro-conf").value);
+  if ($("filtro-busca").value.trim()) p.set("busca", $("filtro-busca").value.trim());
+  const r = await api("GET", `/empresas/${EMPRESA.id}/lancamentos?${p}`);
+  OFFSET += r.itens.length;
+  $("revisar-info").textContent = r.total ? `${r.total} lançamento${r.total > 1 ? "s" : ""}` :
+    ($("filtro-conf").value === "baixa" ? "Nada para revisar. Todas as categorias têm boa confiança." : "Nenhum lançamento encontrado.");
+  $("lista").insertAdjacentHTML("beforeend", r.itens.map(linhaLancamento).join(""));
+  $("btn-mais").hidden = OFFSET >= r.total;
+}
+function linhaLancamento(l) {
+  const opcoes = CATEGORIAS.filter(c => !c.tipo || c.tipo === l.tipo)
+    .map(c => `<option ${c.nome === l.categoria ? "selected" : ""}>${esc(c.nome)}</option>`).join("");
+  return `<div class="lanc" data-id="${l.id}">
+    <span class="data mudo pequeno">${dataBR(l.data)}</span>
+    <span>${esc(l.descricao)} ${l.confianca === "baixa" ? `<span class="chip">sem regra</span>` : ""}</span>
+    <span class="valor ${l.tipo === "saida" ? "neg" : "okc"}">${l.tipo === "saida" ? "−" : "+"}${brl(l.valor)}</span>
+    <div class="acoes-l">
+      <select class="cat" aria-label="Categoria">${opcoes}</select>
+      <select class="aplicar" aria-label="Aplicar a">
+        <option value="iguais">em todos com esta descrição</option>
+        <option value="palavra">em todos que contêm…</option>
+        <option value="este">só neste</option>
+      </select>
+      <input class="palavra" placeholder="palavra-chave" hidden size="14">
+      <button class="sec salvar">Salvar</button>
+    </div></div>`;
+}
+$("lista").addEventListener("change", ev => {
+  if (ev.target.classList.contains("aplicar")) {
+    const linha = ev.target.closest(".lanc"), inp = linha.querySelector(".palavra");
+    inp.hidden = ev.target.value !== "palavra";
+    if (!inp.hidden && !inp.value) inp.value = linha.children[1].textContent.trim().split(/\s+/).slice(0, 2).join(" ");
+  }
+});
+$("lista").addEventListener("click", async ev => {
+  if (!ev.target.classList.contains("salvar")) return;
+  const linha = ev.target.closest(".lanc");
+  const corpo = { categoria: linha.querySelector(".cat").value, aplicar_em: linha.querySelector(".aplicar").value };
+  if (corpo.aplicar_em === "palavra") corpo.palavra_chave = linha.querySelector(".palavra").value;
+  try {
+    const r = await api("PATCH", `/empresas/${EMPRESA.id}/lancamentos/${linha.dataset.id}`, corpo);
+    toast(`${r.atualizados} lançamento${r.atualizados > 1 ? "s" : ""} em "${r.categoria}"${r.regra_criada ? ". Regra salva para os próximos meses." : "."}`);
+    carregarLancamentos(true);
+  } catch (err) { toast(err.message); }
+});
+$("filtro-conf").onchange = () => carregarLancamentos(true);
+let buscaT; $("filtro-busca").oninput = () => { clearTimeout(buscaT); buscaT = setTimeout(() => carregarLancamentos(true), 250); };
+$("btn-mais").onclick = () => carregarLancamentos(false);
+
+(async () => { CATEGORIAS = await api("GET", "/categorias"); carregarEmpresas(); })();
+</script>
+</body>
+</html>
